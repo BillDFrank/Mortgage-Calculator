@@ -12,8 +12,7 @@ app.secret_key = 'your_generated_secret_key'
 # Global dictionary to store scenarios (in-memory, not persistent)
 SCENARIOS = {}
 
-# HTML template using Materialize CSS for a modern interface.
-# The page is divided into two columns: the left for inputs and the right for results.
+# HTML template using Materialize CSS
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -25,43 +24,61 @@ HTML_TEMPLATE = """
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
       body {
-        padding: 20px;
+        padding-top: 0;
       }
-      .input-field input[type="number"] {
-        /* Add dynamic border colors based on inline style */
+      .dark-mode {
+        background-color: #424242 !important;
+        color: #fff !important;
       }
-      .required-field.red-border input {
+      .dark-mode .card {
+        background-color: #616161;
+        color: #fff;
+      }
+      .dark-mode .card .card-content, .dark-mode .card .card-title, .dark-mode label, .dark-mode p {
+        color: #fff !important;
+      }
+      .red-border input:not([readonly]),
+      .red-border textarea:not([readonly]) {
         border-bottom: 2px solid red !important;
+        box-shadow: 0 1px 0 0 red !important;
       }
-      .required-field.green-border input {
+      .green-border input:not([readonly]),
+      .green-border textarea:not([readonly]) {
         border-bottom: 2px solid green !important;
+        box-shadow: 0 1px 0 0 green !important;
       }
       .toggle-table {
         margin-bottom: 15px;
       }
       .results-card {
-        padding: 15px;
+        margin-bottom: 15px;
       }
-      /* For dark mode toggle */
-      .dark-mode {
-        background-color: #424242;
-        color: #fff;
+      nav {
+        margin-bottom: 0;
+      }
+      /* Ensure the amortization table is displayed initially */
+      #amortization_table {
+        display: block;
       }
     </style>
   </head>
   <body id="body">
-    <!-- Navbar with Dark Mode Toggle -->
-    <nav>
-      <div class="nav-wrapper">
-        <a href="#" class="brand-logo center">Mortgage Calculator</a>
+    <!-- Navbar fixed at top -->
+    <nav class="blue">
+      <div class="nav-wrapper container">
+        <a href="#" class="brand-logo">Mortgage Calculator</a>
         <ul id="nav-mobile" class="right">
           <li><a href="#" onclick="toggleDarkMode()"><i class="material-icons">brightness_6</i></a></li>
         </ul>
       </div>
     </nav>
-
-    <div class="container">
+    
+    <div class="container" style="margin-top: 0;">
       {% with messages = get_flashed_messages() %}
         {% if messages %}
           <div class="card-panel red lighten-2">
@@ -73,7 +90,7 @@ HTML_TEMPLATE = """
           </div>
         {% endif %}
       {% endwith %}
-
+      
       <div class="row">
         <!-- Left Column: Inputs -->
         <div class="col s12 m6">
@@ -82,93 +99,81 @@ HTML_TEMPLATE = """
               <span class="card-title">Mortgage Inputs (Euros)</span>
               <form method="POST" action="{{ url_for('index') }}">
                 <div class="row">
-                  <!-- House Price -->
-                  <div class="input-field col s12">
-                    <input id="house_price" type="number" step="0.01" name="house_price" 
-                      value="{{ scenario.house_price if scenario.house_price is not none else '' }}"
-                      class="{% if field_status.house_price == 'red' %}red-border{% elif field_status.house_price == 'green' %}green-border{% endif %}">
+                  <!-- Required fields with dynamic borders -->
+                  <div class="input-field col s12 {% if field_status.house_price %}{{ 'red-border' if field_status.house_price=='red' else 'green-border' }}{% endif %}">
+                    <input id="house_price" type="number" step="0.01" name="house_price" value="{{ scenario.house_price if scenario.house_price is not none else '' }}">
                     <label for="house_price">House Price (€)</label>
                   </div>
-                  <!-- Down Payment -->
-                  <div class="input-field col s12">
-                    <input id="down_payment" type="number" step="0.01" name="down_payment" 
-                      value="{{ scenario.down_payment if scenario.down_payment is not none else '' }}"
-                      class="{% if field_status.down_payment == 'red' %}red-border{% elif field_status.down_payment == 'green' %}green-border{% endif %}">
+                  <div class="input-field col s12 {% if field_status.down_payment %}{{ 'red-border' if field_status.down_payment=='red' else 'green-border' }}{% endif %}">
+                    <input id="down_payment" type="number" step="0.01" name="down_payment" value="{{ scenario.down_payment if scenario.down_payment is not none else '' }}">
                     <label for="down_payment">Down Payment (€)</label>
                   </div>
-                  <!-- Loan Term -->
-                  <div class="input-field col s12">
-                    <input id="loan_term" type="number" step="0.01" name="loan_term" 
-                      value="{{ scenario.loan_term if scenario.loan_term is not none else '' }}"
-                      class="{% if field_status.loan_term == 'red' %}red-border{% elif field_status.loan_term == 'green' %}green-border{% endif %}">
+                  <div class="input-field col s12 {% if field_status.loan_term %}{{ 'red-border' if field_status.loan_term=='red' else 'green-border' }}{% endif %}">
+                    <input id="loan_term" type="number" step="0.01" name="loan_term" value="{{ scenario.loan_term if scenario.loan_term is not none else '' }}">
                     <label for="loan_term">Loan Term (years)</label>
                   </div>
-                  <!-- Interest Rate -->
-                  <div class="input-field col s12">
-                    <input id="interest_rate" type="number" step="0.001" name="interest_rate" 
-                      value="{{ scenario.interest_rate if scenario.interest_rate is not none else '' }}"
-                      class="{% if field_status.interest_rate == 'red' %}red-border{% elif field_status.interest_rate == 'green' %}green-border{% endif %}">
+                  <div class="input-field col s12 {% if field_status.interest_rate %}{{ 'red-border' if field_status.interest_rate=='red' else 'green-border' }}{% endif %}">
+                    <input id="interest_rate" type="number" step="0.001" name="interest_rate" value="{{ scenario.interest_rate if scenario.interest_rate is not none else '' }}">
                     <label for="interest_rate">Interest Rate (%)</label>
                   </div>
-                  <!-- Monthly Payment -->
-                  <div class="input-field col s12">
-                    <input id="monthly_payment" type="number" step="0.01" name="monthly_payment" 
-                      value="{{ scenario.monthly_payment if scenario.monthly_payment is not none else '' }}"
-                      class="{% if field_status.monthly_payment == 'red' %}red-border{% elif field_status.monthly_payment == 'green' %}green-border{% endif %}">
+                  <div class="input-field col s12 {% if field_status.monthly_payment %}{{ 'red-border' if field_status.monthly_payment=='red' else 'green-border' }}{% endif %}">
+                    <input id="monthly_payment" type="number" step="0.01" name="monthly_payment" value="{{ scenario.monthly_payment if scenario.monthly_payment is not none else '' }}">
                     <label for="monthly_payment">Monthly Payment (€)</label>
                   </div>
-                  <!-- Optional Fields -->
+                  <!-- Optional fields -->
                   <div class="input-field col s12">
-                    <input id="bank_spread" type="number" step="0.01" name="bank_spread" 
-                      value="{{ scenario.bank_spread if scenario.bank_spread is not none else '' }}">
+                    <input id="bank_spread" type="number" step="0.01" name="bank_spread" value="{{ scenario.bank_spread if scenario.bank_spread is not none else '' }}">
                     <label for="bank_spread">Bank Spread (%) (optional)</label>
                   </div>
                   <div class="input-field col s12">
-                    <input id="bank_insurances" type="number" step="0.01" name="bank_insurances" 
-                      value="{{ scenario.bank_insurances if scenario.bank_insurances is not none else '' }}">
+                    <input id="bank_insurances" type="number" step="0.01" name="bank_insurances" value="{{ scenario.bank_insurances if scenario.bank_insurances is not none else '' }}">
                     <label for="bank_insurances">Bank Insurances (monthly, €) (optional)</label>
                   </div>
                   <div class="input-field col s12">
-                    <input id="extra_monthly" type="number" step="0.01" name="extra_monthly" 
-                      value="{{ scenario.extra_monthly if scenario.extra_monthly is not none else '' }}">
+                    <input id="extra_monthly" type="number" step="0.01" name="extra_monthly" value="{{ scenario.extra_monthly if scenario.extra_monthly is not none else '' }}">
                     <label for="extra_monthly">Additional Monthly Payment (€) (optional)</label>
                   </div>
                   <div class="input-field col s12">
-                    <input id="extra_annual" type="number" step="0.01" name="extra_annual" 
-                      value="{{ scenario.extra_annual if scenario.extra_annual is not none else '' }}">
+                    <input id="extra_annual" type="number" step="0.01" name="extra_annual" value="{{ scenario.extra_annual if scenario.extra_annual is not none else '' }}">
                     <label for="extra_annual">Additional Annual Payment (€) (optional)</label>
                   </div>
                   <div class="input-field col s12">
-                    <input id="extra_fee_rate" type="number" step="0.01" name="extra_fee_rate" 
-                      value="{{ scenario.extra_fee_rate if scenario.extra_fee_rate is not none else '' }}">
+                    <input id="extra_fee_rate" type="number" step="0.01" name="extra_fee_rate" value="{{ scenario.extra_fee_rate if scenario.extra_fee_rate is not none else '' }}">
                     <label for="extra_fee_rate">Extra Payment Fee (%) (optional)</label>
                     <span class="helper-text">Average fee in Portugal is around 2.5%</span>
                   </div>
-                  <!-- Loan Type -->
+                  <!-- Loan Type: Fixed, Adjustable (2-Stage), Full Variable -->
                   <div class="input-field col s12">
                     <select name="loan_type" id="loan_type" onchange="toggleAdjustableFields()">
                       <option value="fixed" {% if scenario.loan_type=='fixed' %}selected{% endif %}>Fixed Rate</option>
                       <option value="adjustable" {% if scenario.loan_type=='adjustable' %}selected{% endif %}>Adjustable (2-Stage)</option>
+                      <option value="full_variable" {% if scenario.loan_type=='full_variable' %}selected{% endif %}>Full Variable</option>
                     </select>
                     <label>Loan Type</label>
                   </div>
-                  <!-- Adjustable Fields -->
+                  <!-- Adjustable fields (appear only for Adjustable) -->
                   <div class="input-field col s12" id="adjustable_fields" style="display: {% if scenario.loan_type=='adjustable' %}block{% else %}none{% endif %};">
-                    <input id="fixed_period" type="number" step="0.01" name="fixed_period" 
-                      value="{{ scenario.fixed_period if scenario.fixed_period is not none else '' }}">
+                    <input id="fixed_period" type="number" step="0.01" name="fixed_period" value="{{ scenario.fixed_period if scenario.fixed_period is not none else '' }}">
                     <label for="fixed_period">Fixed Period (years)</label>
-                    <input id="adjusted_interest_rate" type="number" step="0.001" name="adjusted_interest_rate" 
-                      value="{{ scenario.adjusted_interest_rate if scenario.adjusted_interest_rate is not none else '' }}">
+                    <input id="adjusted_interest_rate" type="number" step="0.001" name="adjusted_interest_rate" value="{{ scenario.adjusted_interest_rate if scenario.adjusted_interest_rate is not none else '' }}">
                     <label for="adjusted_interest_rate">Adjusted Interest Rate (%)</label>
+                  </div>
+                  <!-- Table View: Monthly or Yearly -->
+                  <div class="input-field col s12">
+                    <select name="table_view" id="table_view">
+                      <option value="monthly" {% if scenario.get('table_view','monthly')=='monthly' %}selected{% endif %}>Monthly Table</option>
+                      <option value="yearly" {% if scenario.get('table_view','monthly')=='yearly' %}selected{% endif %}>Yearly Table</option>
+                    </select>
+                    <label>Table View</label>
                   </div>
                 </div>
                 <div class="row">
                   <div class="col s12">
-                    <button class="btn waves-effect waves-light" type="submit" name="action" value="simulate">Simulate Mortgage
-                      <i class="material-icons right">trending_up</i>
+                    <button class="btn waves-effect waves-light" type="submit" name="action" value="simulate">
+                      Simulate Mortgage <i class="material-icons right">trending_up</i>
                     </button>
-                    <button class="btn waves-effect waves-light" type="submit" name="action" value="save">Save Scenario
-                      <i class="material-icons right">save</i>
+                    <button class="btn waves-effect waves-light" type="submit" name="action" value="save">
+                      Save Scenario <i class="material-icons right">save</i>
                     </button>
                   </div>
                 </div>
@@ -176,6 +181,7 @@ HTML_TEMPLATE = """
             </div>
           </div>
         </div>
+        
         <!-- Right Column: Results -->
         <div class="col s12 m6">
           {% if results %}
@@ -189,14 +195,15 @@ HTML_TEMPLATE = """
               <p><strong>Mortgage Duration:</strong> {{ results.duration }} months</p>
             </div>
           </div>
+          <!-- Toggle for Table -->
           <div class="card results-card">
             <div class="card-content">
-              <button class="btn-flat toggle-table" onclick="toggleTable()">Toggle Amortization Table</button>
+              <button class="btn-flat toggle-table" id="toggleTableBtn">Toggle Amortization Table</button>
               <div id="amortization_table">
                 <table class="striped responsive-table">
                   <thead>
                     <tr>
-                      <th>Month</th>
+                      <th>{{ "Year" if table_view=='yearly' else "Month" }}</th>
                       <th>Payment (€)</th>
                       <th>Extra (€)</th>
                       <th>Fee (€)</th>
@@ -208,7 +215,7 @@ HTML_TEMPLATE = """
                   <tbody>
                     {% for row in results.amortization %}
                     <tr>
-                      <td>{{ row.month }}</td>
+                      <td>{{ row.period }}</td>
                       <td>{{ row.payment|round(2) }}</td>
                       <td>{{ row.extra|round(2) }}</td>
                       <td>{{ row.fee|round(2) }}</td>
@@ -222,6 +229,7 @@ HTML_TEMPLATE = """
               </div>
             </div>
           </div>
+          <!-- Graphs at the bottom -->
           <div class="card results-card">
             <div class="card-content">
               <span class="card-title">Interest Rate Impact</span>
@@ -257,11 +265,10 @@ HTML_TEMPLATE = """
     <!-- Materialize and jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        var elems = document.querySelectorAll('select');
-        M.FormSelect.init(elems);
+        var elemsSelect = document.querySelectorAll('select');
+        M.FormSelect.init(elemsSelect);
       });
       function toggleDarkMode() {
         document.getElementById("body").classList.toggle("dark-mode");
@@ -270,14 +277,12 @@ HTML_TEMPLATE = """
         var loanType = document.getElementById("loan_type").value;
         document.getElementById("adjustable_fields").style.display = (loanType == "adjustable") ? "block" : "none";
       }
-      function toggleTable() {
-        var tableDiv = document.getElementById("amortization_table");
-        if (tableDiv.style.display === "none" || tableDiv.style.display === "") {
-          tableDiv.style.display = "block";
-        } else {
-          tableDiv.style.display = "none";
-        }
-      }
+      // Use jQuery to toggle the table with a slide effect
+      $(document).ready(function(){
+        $("#toggleTableBtn").click(function(){
+          $("#amortization_table").slideToggle();
+        });
+      });
     </script>
   </body>
 </html>
@@ -323,10 +328,10 @@ def solve_for_unknown(data):
     missing = [k for k, v in inputs.items() if v is None]
     if len(missing) > 1:
         raise ValueError(
-            "Please leave exactly one field empty (except optional fields) for auto-calculation.")
+            "Please leave exactly one required field empty (for auto-calculation).")
     if len(missing) == 0:
         raise ValueError(
-            "Please leave exactly one field empty so that it can be calculated automatically.")
+            "Please leave exactly one required field empty so that it can be calculated automatically.")
     unknown = missing[0]
 
     if unknown == "house_price":
@@ -400,6 +405,7 @@ def simulate_amortization(data, computed_monthly_payment):
         "fixed_period") else None
     adjusted_interest_rate = parse_float(data.get(
         "adjusted_interest_rate")) if data.get("adjusted_interest_rate") else None
+    table_view = data.get("table_view", "monthly")
 
     principal = house_price - down_payment
     balance = principal
@@ -409,11 +415,16 @@ def simulate_amortization(data, computed_monthly_payment):
     month = 0
     n = int(loan_term * 12)
 
+    # Determine interest rate behavior based on loan type:
     if loan_type == "adjustable" and fixed_period is not None and adjusted_interest_rate is not None:
         fixed_months = int(fixed_period * 12)
         r_fixed = effective_interest_rate(interest_rate, bank_spread)
         r_adjusted = (adjusted_interest_rate +
                       (bank_spread if bank_spread else 0)) / 100 / 12
+    elif loan_type == "full_variable":
+        fixed_months = 0
+        r_fixed = effective_interest_rate(interest_rate, bank_spread)
+        r_adjusted = r_fixed
     else:
         fixed_months = n
         r_fixed = effective_interest_rate(interest_rate, bank_spread)
@@ -422,6 +433,7 @@ def simulate_amortization(data, computed_monthly_payment):
     if monthly_payment is None:
         monthly_payment = computed_monthly_payment
 
+    monthly_schedule = []
     while balance > 0.01 and month < 1000:
         month += 1
         current_r = r_fixed if month <= fixed_months else r_adjusted
@@ -441,7 +453,7 @@ def simulate_amortization(data, computed_monthly_payment):
         balance = balance - (principal_payment + extra)
         total_interest += interest
         total_fee += fee
-        schedule.append({
+        monthly_schedule.append({
             "month": month,
             "payment": payment,
             "extra": extra,
@@ -450,11 +462,51 @@ def simulate_amortization(data, computed_monthly_payment):
             "principal": principal_payment + extra,
             "balance": max(balance, 0)
         })
-    duration = month
-    total_payments = sum([row["payment"] for row in schedule]
-                         ) + bank_insurances * len(schedule)
+
+    aggregated_schedule = []
+    if table_view == "yearly":
+        current_year = 1
+        year_data = {"payment": 0, "extra": 0, "fee": 0,
+                     "interest": 0, "principal": 0, "balance": None}
+        for row in monthly_schedule:
+            year_data["payment"] += row["payment"]
+            year_data["extra"] += row["extra"]
+            year_data["fee"] += row["fee"]
+            year_data["interest"] += row["interest"]
+            year_data["principal"] += row["principal"]
+            year_data["balance"] = row["balance"]
+            if row["month"] % 12 == 0:
+                aggregated_schedule.append({
+                    "period": current_year,
+                    "payment": year_data["payment"],
+                    "extra": year_data["extra"],
+                    "fee": year_data["fee"],
+                    "interest": year_data["interest"],
+                    "principal": year_data["principal"],
+                    "balance": year_data["balance"]
+                })
+                current_year += 1
+                year_data = {"payment": 0, "extra": 0, "fee": 0,
+                             "interest": 0, "principal": 0, "balance": None}
+        if monthly_schedule[-1]["month"] % 12 != 0:
+            aggregated_schedule.append({
+                "period": current_year,
+                "payment": year_data["payment"],
+                "extra": year_data["extra"],
+                "fee": year_data["fee"],
+                "interest": year_data["interest"],
+                "principal": year_data["principal"],
+                "balance": year_data["balance"]
+            })
+    else:
+        for row in monthly_schedule:
+            row["period"] = row["month"]
+            aggregated_schedule.append(row)
+
+    total_payments = sum([row["payment"] for row in monthly_schedule]
+                         ) + bank_insurances * len(monthly_schedule)
     total_cost = total_payments + total_fee
-    return schedule, total_interest, total_cost, duration
+    return aggregated_schedule, total_interest, total_cost, month
 
 
 def generate_interest_rate_graph(data, computed_payment):
@@ -479,12 +531,13 @@ def generate_interest_rate_graph(data, computed_payment):
                        xaxis=dict(title='Interest Rate (%)'),
                        yaxis=dict(title='Monthly Payment (€)'))
     fig = go.Figure(data=[trace], layout=layout)
-    div = pyo.plot(fig, output_type='div', include_plotlyjs=False)
+    # Include Plotly JS from the CDN so the graph renders properly
+    div = pyo.plot(fig, output_type='div', include_plotlyjs='cdn')
     return div
 
 
 def generate_amortization_graph(schedule):
-    months = [row['month'] for row in schedule]
+    months = [row['period'] for row in schedule]
     cum_payment = []
     cum_extra = []
     cum_fee = []
@@ -522,10 +575,10 @@ def generate_amortization_graph(schedule):
     ]
 
     layout = go.Layout(title='Amortization Graph (Cumulative Totals & Remaining Balance)',
-                       xaxis=dict(title='Month'),
+                       xaxis=dict(title='Period'),
                        yaxis=dict(title='Amount (€)'))
     fig = go.Figure(data=traces, layout=layout)
-    div = pyo.plot(fig, output_type='div', include_plotlyjs=False)
+    div = pyo.plot(fig, output_type='div', include_plotlyjs='cdn')
     return div
 
 
@@ -534,7 +587,6 @@ def index():
     results = None
     plot_div = None
     amortization_div = None
-    # Field status dictionary to set border colors (red for missing fields if >1, green if exactly 1 missing)
     field_status = {
         "house_price": "",
         "down_payment": "",
@@ -555,12 +607,16 @@ def index():
         "extra_fee_rate": None,
         "loan_type": "fixed",
         "fixed_period": None,
-        "adjusted_interest_rate": None
+        "adjusted_interest_rate": None,
+        "table_view": "monthly"
     }
     if request.method == 'POST':
         form = request.form
         for key in scenario.keys():
             scenario[key] = form.get(key) if form.get(key) != "" else None
+
+        if form.get("table_view"):
+            scenario["table_view"] = form.get("table_view")
 
         required_fields = ["house_price", "down_payment",
                            "loan_term", "interest_rate", "monthly_payment"]
@@ -610,7 +666,7 @@ def index():
             "total_cost": total_cost,
             "duration": duration
         }
-    return render_template_string(HTML_TEMPLATE, results=results, plot_div=plot_div, amortization_div=amortization_div, scenario=scenario, saved_scenarios=SCENARIOS, field_status=field_status)
+    return render_template_string(HTML_TEMPLATE, results=results, plot_div=plot_div, amortization_div=amortization_div, scenario=scenario, saved_scenarios=SCENARIOS, field_status=field_status, table_view=scenario.get("table_view", "monthly"))
 
 
 @app.route('/load/<scenario_id>')
@@ -624,3 +680,4 @@ def load_scenario(scenario_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
