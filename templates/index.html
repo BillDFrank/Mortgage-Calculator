@@ -149,7 +149,8 @@
             <div class="card-content">
               <span class="card-title">Results</span>
               <p><strong>Calculated Field:</strong> {{ results.calculated_field }}</p>
-              <p><strong>Calculated Value:</strong> {{ results.calculated_value|round(4) }}</p>
+              <p><strong>Calculated Value:</strong> {{ results.calculated_value|round(2) }}</p>
+              <p><strong>Total Borrowed:</strong> €{{results.total_borrowed|round(2) }}</p>
               <p><strong>Total Cost:</strong> €{{ results.total_cost|round(2) }}</p>
               <p><strong>Total Interest Paid:</strong> €{{ results.total_interest|round(2) }}</p>
               <p><strong>Mortgage Duration:</strong> {{ results.duration }} months</p>
