@@ -1,0 +1,72 @@
+html, body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    padding-top: 0;
+  }
+  
+  .dark-mode {
+    background-color: #424242 !important;
+    color: #fff !important;
+  }
+  
+  .dark-mode .card {
+    background-color: #616161;
+    color: #fff;
+  }
+  
+  .dark-mode .card .card-content,
+  .dark-mode .card .card-title,
+  .dark-mode label,
+  .dark-mode p {
+    color: #fff !important;
+  }
+  
+  .red-border input:not([readonly]),
+  .red-border textarea:not([readonly]) {
+    border-bottom: 2px solid red !important;
+    box-shadow: 0 1px 0 0 red !important;
+  }
+  
+  .green-border input:not([readonly]),
+  .green-border textarea:not([readonly]) {
+    border-bottom: 2px solid green !important;
+    box-shadow: 0 1px 0 0 green !important;
+  }
+  
+  .toggle-table {
+    margin-bottom: 15px;
+  }
+  
+  .results-card {
+    margin-bottom: 15px;
+  }
+  
+  nav {
+    margin-bottom: 0;
+  }
+  
+  /* Ensure the amortization table is displayed initially */
+  #amortization_table {
+    display: block;
+  }
+  
+  /* New styles for description text and required field marker */
+  .calc-description {
+    font-size: 0.9em;
+    margin-bottom: 15px;
+  }
+  
+  .required {
+    color: red;
+  }
+  
+  /* Fix for labels with two lines so they do not overlap the input field */
+  .input-field label {
+    white-space: normal;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  
